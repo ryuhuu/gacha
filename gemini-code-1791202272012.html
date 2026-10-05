@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hari Ini Mau Mabar Apa</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Poppins & Orbitron -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at 50% 20%, #1e1136 0%, #0d0b18 50%, #050409 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-gaming {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Glow & Neon Effects */
+    .glow-purple {
+      box-shadow: 0 0 35px -5px rgba(168, 85, 247, 0.45);
+    }
+
+    .neon-text-title {
+      text-shadow: 0 0 15px rgba(236, 72, 153, 0.6), 0 0 30px rgba(168, 85, 247, 0.4);
+    }
+
+    /* Roulette Reel Carousel */
+    .reel-window {
+      mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    }
+
+    .reel-track {
+      display: flex;
+      gap: 16px;
+      transition: transform cubic-bezier(0.12, 0.8, 0.22, 1);
+      will-change: transform;
+    }
+
+    .card-item {
+      flex: 0 0 180px;
+      height: 220px;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 640px) {
+      .card-item {
+        flex: 0 0 150px;
+        height: 190px;
+      }
+    }
+
+    /* Center Marker pointer */
+    .pointer-indicator {
+      filter: drop-shadow(0 0 10px #f43f5e);
+    }
+
+    /* Pulse animation */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .pulse-glow {
+      animation: pulse-ring 2.5s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="text-slate-100 flex flex-col justify-between items-center p-4 selection:bg-pink-500 selection:text-white">
+
+  <header class="w-full max-w-2xl text-center pt-6 pb-2">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-xs font-semibold text-purple-300 tracking-wider uppercase mb-3 backdrop-blur-sm">
+      <span class="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span>
+      Mystery Selector Wheel
+    </div>
+    <h1 class="font-gaming text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-400 to-cyan-400 neon-text-title">
+      Hari Ini Mau Mabar Apa?
+    </h1>
+    <p class="text-slate-400 text-xs sm:text-sm mt-2 max-w-md mx-auto">
+      Bingung mau login game apa sama squad? Putar gacha untuk tentukan takdir mabar hari ini!
+    </p>
+  </header>
+
+  <main class="w-full max-w-xl my-auto py-4 flex flex-col items-center">
+    
+    <!-- Roulette Arena Container -->
+    <div class="w-full bg-slate-900/80 border border-purple-500/30 rounded-3xl p-4 sm:p-6 backdrop-blur-xl glow-purple relative flex flex-col items-center overflow-hidden">
+      
+      <!-- Center Indicator Marker (Target Point) -->
+      <div class="absolute top-2 z-20 pointer-events-none flex flex-col items-center pointer-indicator">
+        <svg class="w-7 h-7 text-rose-500 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21l-8-9h16l-8 9zM12 3a4 4 0 00-4 4c0 2 4 6 4 6s4-4 4-6a4 4 0 00-4-4z"/>
+        </svg>
+      </div>
+      <div class="absolute bottom-2 z-20 pointer-events-none flex flex-col items-center pointer-indicator">
+        <svg class="w-7 h-7 text-rose-500 transform rotate-180 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21l-8-9h16l-8 9z"/>
+        </svg>
+      </div>
+
+      <!-- Reel Window Frame -->
+      <div class="reel-window w-full overflow-hidden py-5 my-2">
+        <div id="reelTrack" class="reel-track">
+          <!-- Dynamically populated cards -->
+        </div>
+      </div>
+
+      <!-- Result Banner Modal / Floating Box -->
+      <div id="resultModal" class="hidden flex-col items-center mt-3 p-3 bg-gradient-to-r from-purple-900/60 to-pink-900/60 border border-purple-400/40 rounded-2xl w-full text-center animate-fade-in transition-all">
+        <span class="text-xs uppercase tracking-widest text-slate-300 font-bold mb-1">Keputusan Mutlak:</span>
+        <div id="winnerName" class="font-gaming text-2xl font-black text-white">---</div>
+        <p id="winnerQuote" class="text-xs text-purple-200 italic mt-0.5 font-light">Squad siap gas sekarang!</p>
+      </div>
+
+      <!-- Gacha Action Button -->
+      <div class="w-full mt-6 flex flex-col items-center gap-3">
+        <button id="spinBtn" onclick="triggerGacha()" class="w-full sm:w-4/5 py-4 px-8 rounded-2xl font-gaming font-extrabold text-lg sm:text-xl tracking-wider text-white uppercase bg-gradient-to-r from-rose-500 via-purple-600 to-cyan-500 hover:from-rose-400 hover:to-cyan-400 active:scale-95 shadow-lg shadow-purple-600/40 transition duration-200 transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+          SPIN GACHA!
+        </button>
+
+        <div class="flex items-center gap-4 text-xs text-slate-400">
+          <label class="flex items-center gap-1.5 cursor-pointer hover:text-slate-300 transition">
+            <input type="checkbox" id="soundToggle" checked class="rounded accent-purple-500 cursor-pointer">
+            <span>Sound SFX</span>
+          </label>
+          <span class="text-slate-600">•</span>
+          <button onclick="clearHistory()" class="hover:text-rose-400 transition underline underline-offset-2">Reset History</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="w-full mt-6 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 backdrop-blur-md">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2 text-xs font-semibold text-slate-300 uppercase tracking-wide">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Riwayat Tarikan Terakhir
+        </div>
+        <span id="historyCount" class="text-[11px] bg-slate-800 text-purple-300 px-2 py-0.5 rounded-full font-mono">0 tarikan</span>
+      </div>
+
+      <div id="historyList" class="flex flex-wrap gap-2 max-h-24 overflow-y-auto pr-1">
+        <span class="text-xs text-slate-500 italic">Belum ada riwayat gacha.</span>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="w-full text-center py-4 text-xs text-slate-500">
+    Pilihannya acak &amp; no debat! Jangan lupa ajak kawan mabar.
+  </footer>
+
+  <script>
+    /*
+      DATA GAME
+      Peluang diatur via JavaScript di balik layar:
+      - Roblox: 70% (Bobot 70)
+      - Mobile Legends (MLBB): 15% (Bobot 15)
+      - PUBG Mobile: 15% (Bobot 15)
+      Tidak ada indikator angka persentase pada tampilan UI pengguna.
+    */
+    const GAME_LIST = [
+      {
+        id: "roblox",
+        name: "Roblox",
+        alias: "Roblox",
+        subtitle: "Blox Fruits / Brookhaven / Obby",
+        icon: "🟥",
+        gradient: "from-rose-600/40 via-red-900/40 to-slate-900/90",
+        border: "border-rose-500/50",
+        textColor: "text-rose-400",
+        quote: "Saatnya jelajahi ribuan multiverse santai bareng squad!",
+        weight: 70 // 70% Peluang
+      },
+      {
+        id: "mlbb",
+        name: "Mobile Legends",
+        alias: "MLBB",
+        subtitle: "Land of Dawn Ranked Push",
+        icon: "⚔️️",
+        gradient: "from-blue-600/40 via-indigo-950/40 to-slate-900/90",
+        border: "border-blue-500/50",
+        textColor: "text-blue-400",
+        quote: "Siapin Hero andalanmu, amankan Lord dan ratakan Turret!",
+        weight: 15 // 15% Peluang
+      },
+      {
+        id: "pubg",
+        name: "PUBG Mobile",
+        alias: "Pabji",
+        subtitle: "Winner Winner Chicken Dinner",
+        icon: "🍳",
+        gradient: "from-amber-600/40 via-yellow-950/40 to-slate-900/90",
+        border: "border-amber-500/50",
+        textColor: "text-amber-400",
+        quote: "Looting helm Lv 3, hindari Red Zone, kejar Chicken Dinner!",
+        weight: 15 // 15% Peluang
+      }
+    ];
+
+    // Elemen DOM
+    const reelTrack = document.getElementById('reelTrack');
+    const spinBtn = document.getElementById('spinBtn');
+    const resultModal = document.getElementById('resultModal');
+    const winnerNameEl = document.getElementById('winnerName');
+    const winnerQuoteEl = document.getElementById('winnerQuote');
+    const historyListEl = document.getElementById('historyList');
+    const historyCountEl = document.getElementById('historyCount');
+    const soundToggle = document.getElementById('soundToggle');
+
+    let isSpinning = false;
+    let historyData = [];
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx && AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // Sound effect generator for wheel tick
+    function playTickSound() {
+      if (!soundToggle.checked) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(450 + Math.random() * 80, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (e) {
+        // Silently catch audio restrictions
+      }
+    }
+
+    // Sound effect generator for winning celebratory fanfare
+    function playWinSound() {
+      if (!soundToggle.checked) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.09);
+          gain.gain.setValueAtTime(0.12, audioCtx.currentTime + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.09 + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + idx * 0.09);
+          osc.stop(audioCtx.currentTime + idx * 0.09 + 0.35);
+        });
+      } catch (e) {}
+    }
+
+    // Logika pemilihan terbobot (Weighted Random)
+    function pickWeightedGame() {
+      const totalWeight = GAME_LIST.reduce((acc, curr) => acc + curr.weight, 0);
+      let rand = Math.random() * totalWeight;
+
+      for (let game of GAME_LIST) {
+        if (rand < game.weight) {
+          return game;
+        }
+        rand -= game.weight;
+      }
+      return GAME_LIST[0]; // fallback
+    }
+
+    function createCardElement(game) {
+      const card = document.createElement('div');
+      card.className = `card-item flex flex-col justify-between items-center text-center p-3 rounded-2xl bg-gradient-to-b ${game.gradient} border ${game.border} shadow-inner backdrop-blur-md`;
+      card.innerHTML = `
+        <span class="text-3xl sm:text-4xl mt-2 select-none">${game.icon}</span>
+        <div class="my-auto px-1">
+          <div class="font-gaming font-extrabold text-sm sm:text-base text-white leading-tight">${game.alias}</div>
+          <div class="text-[10px] text-slate-300/80 line-clamp-2 mt-1 leading-snug">${game.subtitle}</div>
+        </div>
+        <div class="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-slate-300 font-semibold mb-1">
+          Pilihan Game
+        </div>
+      `;
+      return card;
+    }
+
+    const TOTAL_REEL_ITEMS = 60;
+    const WINNING_INDEX = 48; // Indeks berhenti
+    let currentReelData = [];
+
+    function populateInitialReel() {
+      reelTrack.innerHTML = '';
+      currentReelData = [];
+      for (let i = 0; i < TOTAL_REEL_ITEMS; i++) {
+        // Isi reel acak untuk preview
+        const randomGame = GAME_LIST[Math.floor(Math.random() * GAME_LIST.length)];
+        currentReelData.push(randomGame);
+        reelTrack.appendChild(createCardElement(randomGame));
+      }
+      centerOnIndex(0, false);
+    }
+
+    function getCardWidth() {
+      const sampleCard = document.querySelector('.card-item');
+      if (!sampleCard) return 180 + 16;
+      const style = window.getComputedStyle(sampleCard);
+      const gap = 16; // gap-4 = 1rem = 16px
+      return sampleCard.offsetWidth + gap;
+    }
+
+    function centerOnIndex(index, animated = true, durationMs = 4000) {
+      const windowWidth = reelTrack.parentElement.offsetWidth;
+      const cardWidth = getCardWidth();
+      const cardActualWidth = document.querySelector('.card-item')?.offsetWidth || 180;
+      
+      // Hitung posisi tengah kartu
+      const targetOffset = (index * cardWidth) - (windowWidth / 2) + (cardActualWidth / 2);
+      
+      if (animated) {
+        reelTrack.style.transition = `transform ${durationMs}ms cubic-bezier(0.1, 0.9, 0.2, 1)`;
+      } else {
+        reelTrack.style.transition = 'none';
+      }
+      reelTrack.style.transform = `translateX(-${targetOffset}px)`;
+    }
+
+    function triggerGacha() {
+      if (isSpinning) return;
+      initAudio();
+      isSpinning = true;
+      spinBtn.disabled = true;
+      resultModal.classList.add('hidden');
+
+      // Ambil pemenang menggunakan weighted random (Roblox berpeluang 70%)
+      const selectedGame = pickWeightedGame();
+
+      // Rekonstruksi reel dengan pemenang di posisi WINNING_INDEX
+      reelTrack.innerHTML = '';
+      currentReelData = [];
+      
+      for (let i = 0; i < TOTAL_REEL_ITEMS; i++) {
+        let gameForSlot;
+        if (i === WINNING_INDEX) {
+          gameForSlot = selectedGame;
+        } else {
+          gameForSlot = GAME_LIST[Math.floor(Math.random() * GAME_LIST.length)];
+        }
+        currentReelData.push(gameForSlot);
+        reelTrack.appendChild(createCardElement(gameForSlot));
+      }
+
+      // Reset posisi ke awal
+      centerOnIndex(2, false);
+
+      // Jalankan animasi pergeseran setelah browser repaint
+      const spinDuration = 4500;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          centerOnIndex(WINNING_INDEX, true, spinDuration);
+
+          // SFX Ticking cadence
+          const tickInterval = setInterval(() => {
+            playTickSound();
+          }, 140);
+
+          setTimeout(() => {
+            clearInterval(tickInterval);
+          }, spinDuration - 600);
+        }, 50);
+      });
+
+      // Saat selesai berputar
+      setTimeout(() => {
+        isSpinning = false;
+        spinBtn.disabled = false;
+        
+        // Tampilkan Hasil
+        winnerNameEl.textContent = `${selectedGame.icon} ${selectedGame.name}`;
+        winnerQuoteEl.textContent = selectedGame.quote;
+        resultModal.classList.remove('hidden');
+
+        // Mainkan SFX Fanfare & Confetti
+        playWinSound();
+        triggerVictoryConfetti();
+
+        // Tambah ke history
+        addToHistory(selectedGame);
+      }, spinDuration + 150);
+    }
+
+    function triggerVictoryConfetti() {
+      if (typeof confetti !== 'function') return;
+      confetti({
+        particleCount: 70,
+        spread: 70,
+        origin: { y: 0.65 }
+      });
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0.1, y: 0.7 }
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 0.9, y: 0.7 }
+        });
+      }, 250);
+    }
+
+    function addToHistory(game) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      
+      historyData.unshift({ game, time: timeStr });
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (historyData.length === 0) {
+        historyListEl.innerHTML = '<span class="text-xs text-slate-500 italic">Belum ada riwayat gacha.</span>';
+        historyCountEl.textContent = '0 tarikan';
+        return;
+      }
+
+      historyCountEl.textContent = `${historyData.length} tarikan`;
+      historyListEl.innerHTML = '';
+
+      historyData.slice(0, 10).forEach(item => {
+        const badge = document.createElement('div');
+        badge.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-slate-800/80 border ${item.game.border} text-slate-200`;
+        badge.innerHTML = `
+          <span>${item.game.icon}</span>
+          <span class="font-semibold">${item.game.alias}</span>
+          <span class="text-[10px] text-slate-400 font-mono ml-0.5">${item.time}</span>
+        `;
+        historyListEl.appendChild(badge);
+      });
+    }
+
+    function clearHistory() {
+      historyData = [];
+      renderHistory();
+    }
+
+    // Init & Resize Handler
+    window.addEventListener('load', () => {
+      populateInitialReel();
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (!isSpinning) {
+          centerOnIndex(resultModal.classList.contains('hidden') ? 2 : WINNING_INDEX, false);
+        }
+      }, 150);
+    });
+  </script>
+</body>
+</html>
